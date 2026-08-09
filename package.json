@@ -1,0 +1,22 @@
+{
+  "name": "andro-arabic-subtitles",
+  "version": "1.2.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "fflate": "^0.8.3",
+    "next": "^16.3.0",
+    "react": "19.1.1",
+    "react-dom": "19.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "22.15.3",
+    "@types/react": "19.1.9",
+    "@types/react-dom": "19.1.7",
+    "typescript": "5.9.2"
+  }
+}

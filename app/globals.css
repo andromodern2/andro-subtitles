@@ -1,0 +1,254 @@
+:root {
+  --bg: #131317;
+  --bg-soft: #1a1a1e;
+  --card: #1e1e24;
+  --line: rgba(255, 255, 255, 0.09);
+  --text: #f3f3f5;
+  --muted: #9a9aa6;
+  --accent: #8b5cf6;
+  --accent-soft: rgba(139, 92, 246, 0.14);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-kufi), system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 6vw;
+}
+
+/* ---------- hero ---------- */
+.hero {
+  padding: 88px 0 72px;
+  text-align: center;
+  background: radial-gradient(120% 90% at 50% -10%, rgba(139, 92, 246, 0.22), transparent 62%);
+}
+
+.brandRow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-bottom: 26px;
+}
+
+.brandRow img {
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
+}
+
+.brandName {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+.badges {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+
+.badge {
+  font-size: 12.5px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.badge.accent {
+  color: #c4b5fd;
+  border-color: rgba(139, 92, 246, 0.4);
+  background: var(--accent-soft);
+}
+
+h1 {
+  font-size: clamp(30px, 5.4vw, 52px);
+  line-height: 1.18;
+  font-weight: 700;
+  margin: 0 0 20px;
+  letter-spacing: -0.02em;
+}
+
+.lede {
+  font-size: clamp(15px, 2vw, 18px);
+  line-height: 1.75;
+  color: var(--muted);
+  max-width: 660px;
+  margin: 0 auto 38px;
+  font-weight: 300;
+}
+
+.arabicLine {
+  margin-top: 42px;
+  font-size: clamp(19px, 3vw, 26px);
+  color: #c4b5fd;
+  direction: rtl;
+  font-weight: 500;
+}
+
+/* ---------- install ---------- */
+.installBtn {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 700;
+  padding: 15px 40px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 10px 34px rgba(139, 92, 246, 0.34);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.installBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 40px rgba(139, 92, 246, 0.46);
+}
+
+.urlRow {
+  display: flex;
+  gap: 8px;
+  max-width: 620px;
+  margin: 24px auto 12px;
+}
+
+.urlBox {
+  flex: 1;
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px 15px;
+  font-size: 13.5px;
+  color: var(--muted);
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.copyBtn {
+  background: var(--card);
+  border: 1px solid var(--line);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 0 20px;
+  font-size: 13.5px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: border-color 0.15s ease;
+}
+
+.copyBtn:hover {
+  border-color: var(--accent);
+}
+
+.hint {
+  font-size: 13px;
+  color: #6f6f7d;
+  font-weight: 300;
+}
+
+/* ---------- sections ---------- */
+section {
+  padding: 76px 0;
+  border-top: 1px solid var(--line);
+}
+
+h2 {
+  font-size: clamp(23px, 3.4vw, 32px);
+  font-weight: 700;
+  text-align: center;
+  margin: 0 0 48px;
+  letter-spacing: -0.01em;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  gap: 18px;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  padding: 28px;
+}
+
+.card h3 {
+  font-size: 16.5px;
+  margin: 0 0 11px;
+  font-weight: 700;
+}
+
+.card p {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.72;
+  color: var(--muted);
+  font-weight: 300;
+}
+
+/* ---------- steps ---------- */
+.steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+  gap: 30px;
+}
+
+.stepNum {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.18em;
+  margin-bottom: 12px;
+}
+
+.step h3 {
+  font-size: 18px;
+  margin: 0 0 10px;
+  font-weight: 700;
+}
+
+.step p {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.72;
+  color: var(--muted);
+  font-weight: 300;
+}
+
+footer {
+  border-top: 1px solid var(--line);
+  padding: 44px 0 60px;
+  text-align: center;
+  color: #6f6f7d;
+  font-size: 13.5px;
+  font-weight: 300;
+}
+
+footer .tag {
+  margin-top: 8px;
+  color: var(--accent);
+}
