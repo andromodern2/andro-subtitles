@@ -121,55 +121,79 @@ async function fromStremioV3(p: ParsedId, lang: "ara" | "eng"): Promise<Subtitle
     .filter((r) => r.url)
 }
 
-/* ---------------- Source 3: SubSource (movies) ---------------- */
-// SubSource has the deepest Arabic catalogue (58 entries for Skyfall vs 27 on
-// OpenSubtitles) but is addressed by title slug, not IMDb id. Slugs are
-// resolved through Stremio's free Cinemeta metadata. Series slugs proved
-// unreliable (the bare show slug returns an arbitrary season), so SubSource is
-// used for films only; series are well covered by the two sources above.
+/* ---------------- Source 3: SubSource (films and series) ---------------- */
+// SubSource has by far the deepest Arabic catalogue (58 entries for Skyfall,
+// 223 for Game of Thrones season 1) and — critically — it is reachable from
+// Vercel, unlike OpenSubtitles, which Cloudflare blocks for datacenter IPs.
+//
+// It is addressed by title slug rather than IMDb id, so slugs are built from
+// Stremio's free Cinemeta metadata:
+//   films  -> "skyfall-2012"             (title + release year)
+//   series -> "game-of-thrones/season-1" (title, then a season path segment)
 
-async function subsourceSlug(p: ParsedId): Promise<string | null> {
+function slugify(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/['’]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+async function subsourcePath(p: ParsedId): Promise<string | null> {
+  const type = p.season !== undefined ? "series" : "movie"
   const meta = (await getJson(
-    `https://v3-cinemeta.strem.io/meta/movie/${p.imdb}.json`,
+    `https://v3-cinemeta.strem.io/meta/${type}/${p.imdb}.json`,
     6000,
   )) as { meta?: { name?: string; year?: string; releaseInfo?: string } } | null
 
   const name = meta?.meta?.name
   if (!name) return null
+  const slug = slugify(name)
+  if (!slug) return null
+
+  if (p.season !== undefined) return `${slug}/season-${p.season}`
+
   const year = String(meta.meta?.year || meta.meta?.releaseInfo || "").match(/\d{4}/)?.[0]
-  if (!year) return null
+  return year ? `${slug}-${year}` : null
+}
 
-  const slug = name
-    .toLowerCase()
-    .replace(/['’]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-
-  return `${slug}-${year}`
+// A season listing covers every episode, so results must be narrowed to the
+// requested one. Season packs (no episode marker) are excluded deliberately:
+// they are multi-file archives and we cannot tell which file is this episode.
+function isEpisode(releaseInfo: string, season: number, episode: number): boolean {
+  const info = String(releaseInfo)
+  if (new RegExp(`s0*${season}e0*${episode}(?!\\d)`, "i").test(info)) return true
+  if (new RegExp(`(^|[^\\d])${season}x0*${episode}(?!\\d)`, "i").test(info)) return true
+  return false
 }
 
 async function fromSubSource(p: ParsedId): Promise<SubtitleItem[]> {
-  if (p.season !== undefined) return []
-  const slug = await subsourceSlug(p)
-  if (!slug) return []
+  const path = await subsourcePath(p)
+  if (!path) return []
 
   const data = (await getJson(
-    `https://api.subsource.net/v1/subtitles/${encodeURIComponent(slug)}/arabic`,
+    `https://api.subsource.net/v1/subtitles/${path}/arabic`,
     8000,
     BROWSER_UA,
   )) as { subtitles?: Array<Record<string, unknown>> } | null
 
-  const rows = data && Array.isArray(data.subtitles) ? data.subtitles : []
-  return rows
-    .filter((r) => r && /arab/i.test(String(r.language || "")) && r.link)
-    .map((r) => ({
-      key: `ss-${r.id}`,
-      // Served through our own proxy, which unzips and re-encodes.
-      url: `/api/sub?s=${Buffer.from(String(r.link), "utf-8").toString("base64url")}`,
-      name: String(r.release_info || "Arabic"),
-      downloads: Number(r.downloads) || 0,
-      source: "subsource" as const,
-    }))
+  let rows = data && Array.isArray(data.subtitles) ? data.subtitles : []
+  rows = rows.filter((r) => r && /arab/i.test(String(r.language || "")) && r.link)
+
+  if (p.season !== undefined && p.episode !== undefined) {
+    const season = p.season
+    const episode = p.episode
+    rows = rows.filter((r) => isEpisode(String(r.release_info || ""), season, episode))
+  }
+
+  return rows.map((r) => ({
+    key: `ss-${r.id}`,
+    // Served through our own proxy, which unzips and re-encodes.
+    url: `/api/sub?s=${Buffer.from(String(r.link), "utf-8").toString("base64url")}`,
+    name: String(r.release_info || "Arabic"),
+    downloads: Number(r.downloads) || 0,
+    source: "subsource" as const,
+  }))
 }
 
 /* ---------------- Aggregation ---------------- */
