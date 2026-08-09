@@ -202,3 +202,68 @@ export async function getBestEnglishUrl(p: ParsedId): Promise<string | null> {
   all.sort((a, b) => b.downloads - a.downloads)
   return all[0].url
 }
+
+/* ---------------- Diagnostics ---------------- */
+// Reports what each source returns *from the machine actually running this
+// code*. Local results and production results can differ (a provider may block
+// datacenter IPs), and without this you are guessing.
+
+export interface SourceProbe {
+  source: string
+  ok: boolean
+  count: number
+  ms: number
+  error?: string
+}
+
+export async function probeSources(p: ParsedId): Promise<SourceProbe[]> {
+  const jobs: Array<[string, () => Promise<SubtitleItem[]>]> = [
+    ["opensubtitles", () => fromOpenSubtitles(p, "ara")],
+    ["stremio-v3", () => fromStremioV3(p, "ara")],
+    ["subsource", () => fromSubSource(p)],
+    ["english-for-ai", () => fromStremioV3(p, "eng")],
+  ]
+
+  return Promise.all(
+    jobs.map(async ([name, fn]) => {
+      const started = Date.now()
+      try {
+        const items = await fn()
+        return { source: name, ok: true, count: items.length, ms: Date.now() - started }
+      } catch (e) {
+        return {
+          source: name,
+          ok: false,
+          count: 0,
+          ms: Date.now() - started,
+          error: e instanceof Error ? e.message : "unknown",
+        }
+      }
+    }),
+  )
+}
+
+// Raw reachability check for the provider most likely to be IP-blocked.
+export async function probeOpenSubtitlesRaw(): Promise<Record<string, unknown>> {
+  const url = "https://rest.opensubtitles.org/search/imdbid-1074638/sublanguageid-ara"
+  const started = Date.now()
+  try {
+    const ctl = new AbortController()
+    const timer = setTimeout(() => ctl.abort(), 8000)
+    const r = await fetch(url, {
+      signal: ctl.signal,
+      headers: { "User-Agent": ADDON_UA, Accept: "application/json" },
+    })
+    clearTimeout(timer)
+    const body = await r.text()
+    return {
+      status: r.status,
+      ms: Date.now() - started,
+      bytes: body.length,
+      looksLikeJson: body.startsWith("["),
+      snippet: body.slice(0, 120),
+    }
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "unknown", ms: Date.now() - started }
+  }
+}
